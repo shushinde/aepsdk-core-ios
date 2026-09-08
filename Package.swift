@@ -19,11 +19,17 @@ let package = Package(
     name: "AEPCore",
     platforms: [.iOS(.v12), .tvOS(.v12)],
     products: [
-        .library(name: "AEPCore", targets: ["AEPCore"]),
-        .library(name: "AEPIdentity", targets: ["AEPIdentity"]),
-        .library(name: "AEPLifecycle", targets: ["AEPLifecycle"]),
-        .library(name: "AEPServices", targets: ["AEPServices"]),
-        .library(name: "AEPSignal", targets: ["AEPSignal"]),
+        // type: .dynamic is required for `xcodebuild archive` to wrap the build output as a
+        // proper .framework bundle (Info.plist/Modules/Headers) instead of a raw compiled
+        // object -- SPM's default "automatic" linking resolves to static for a standalone
+        // archive, and static SPM products aren't wrapped as frameworks. This also matches
+        // the existing CocoaPods `use_frameworks!` behavior, which already ships these as
+        // dynamic frameworks to consumers.
+        .library(name: "AEPCore", type: .dynamic, targets: ["AEPCore"]),
+        .library(name: "AEPIdentity", type: .dynamic, targets: ["AEPIdentity"]),
+        .library(name: "AEPLifecycle", type: .dynamic, targets: ["AEPLifecycle"]),
+        .library(name: "AEPServices", type: .dynamic, targets: ["AEPServices"]),
+        .library(name: "AEPSignal", type: .dynamic, targets: ["AEPSignal"]),
         // AUTO-GENERATED-BINARY-PRODUCTS:START
         // AUTO-GENERATED-BINARY-PRODUCTS:END
     ],

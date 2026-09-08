@@ -130,9 +130,6 @@ ci-archive-ios: _archive-ios
 
 _archive: clean build-ios build-tvos
 	@set -eo pipefail; \
-	echo "--- DEBUG: archive contents ---"; \
-	find ./build/$(AEPSERVICES_TARGET_NAME)-ios_simulator.xcarchive -maxdepth 6; \
-	echo "--- END DEBUG ---"; \
 	for module in $(SPM_ARCHIVE_MODULES); do \
 		echo "Creating xcframework for $$module (iOS + tvOS)..."; \
 		xcodebuild -create-xcframework \
@@ -178,6 +175,8 @@ build-ios:
 	done; \
 	RULESENGINE_CHECKOUT=$$(find ~/Library/Developer/Xcode/DerivedData -maxdepth 6 -type d -ipath "*SourcePackages/checkouts*rulesengine*" 2>/dev/null | head -1); \
 	if [ -z "$$RULESENGINE_CHECKOUT" ]; then echo "Could not find resolved AEPRulesEngine checkout under .build/checkouts"; exit 1; fi; \
+	echo "Patching $$RULESENGINE_CHECKOUT/Package.swift to declare a dynamic library (needed for xcodebuild archive to produce a .framework bundle; upstream doesn't set this)"; \
+	sed -i '' 's#\.library(name: "AEPRulesEngine", targets: \["AEPRulesEngine"\])#.library(name: "AEPRulesEngine", type: .dynamic, targets: ["AEPRulesEngine"])#' "$$RULESENGINE_CHECKOUT/Package.swift"; \
 	echo "Archiving $(AEPRULESENGINE_TARGET_NAME) for iOS device from $$RULESENGINE_CHECKOUT..."; \
 	(cd "$$RULESENGINE_CHECKOUT" && xcodebuild archive -scheme $(AEPRULESENGINE_TARGET_NAME) -archivePath "$(CURR_DIR)/build/$(AEPRULESENGINE_TARGET_NAME)-ios.xcarchive" -destination "generic/platform=iOS" SKIP_INSTALL=NO BUILD_LIBRARY_FOR_DISTRIBUTION=YES); \
 	echo "Archiving $(AEPRULESENGINE_TARGET_NAME) for iOS simulator from $$RULESENGINE_CHECKOUT..."; \
@@ -196,6 +195,8 @@ build-tvos:
 	done; \
 	RULESENGINE_CHECKOUT=$$(find ~/Library/Developer/Xcode/DerivedData -maxdepth 6 -type d -ipath "*SourcePackages/checkouts*rulesengine*" 2>/dev/null | head -1); \
 	if [ -z "$$RULESENGINE_CHECKOUT" ]; then echo "Could not find resolved AEPRulesEngine checkout under .build/checkouts"; exit 1; fi; \
+	echo "Patching $$RULESENGINE_CHECKOUT/Package.swift to declare a dynamic library (needed for xcodebuild archive to produce a .framework bundle; upstream doesn't set this)"; \
+	sed -i '' 's#\.library(name: "AEPRulesEngine", targets: \["AEPRulesEngine"\])#.library(name: "AEPRulesEngine", type: .dynamic, targets: ["AEPRulesEngine"])#' "$$RULESENGINE_CHECKOUT/Package.swift"; \
 	echo "Archiving $(AEPRULESENGINE_TARGET_NAME) for tvOS device from $$RULESENGINE_CHECKOUT..."; \
 	(cd "$$RULESENGINE_CHECKOUT" && xcodebuild archive -scheme $(AEPRULESENGINE_TARGET_NAME) -archivePath "$(CURR_DIR)/build/$(AEPRULESENGINE_TARGET_NAME)-tvos.xcarchive" -destination "generic/platform=tvOS" SKIP_INSTALL=NO BUILD_LIBRARY_FOR_DISTRIBUTION=YES); \
 	echo "Archiving $(AEPRULESENGINE_TARGET_NAME) for tvOS simulator from $$RULESENGINE_CHECKOUT..."; \
