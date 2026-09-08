@@ -9,14 +9,10 @@ AEPSIGNAL_TARGET_NAME = AEPSignal
 AEPRULESENGINE_TARGET_NAME = AEPRulesEngine
 AEPINTEGRATION_TEST_TARGET_NAME = AEPIntegrationTests
 
-SIMULATOR_ARCHIVE_PATH = ./build/ios_simulator.xcarchive/Products/Library/Frameworks/
-TVOS_SIMULATOR_ARCHIVE_PATH = ./build/tvos_simulator.xcarchive/Products/Library/Frameworks/
-SIMULATOR_ARCHIVE_DSYM_PATH = $(CURR_DIR)/build/ios_simulator.xcarchive/dSYMs/
-TVOS_SIMULATOR_ARCHIVE_DSYM_PATH = $(CURR_DIR)/build/tvos_simulator.xcarchive/dSYMs/
-IOS_ARCHIVE_PATH = ./build/ios.xcarchive/Products/Library/Frameworks/
-TVOS_ARCHIVE_PATH = ./build/tvos.xcarchive/Products/Library/Frameworks/
-IOS_ARCHIVE_DSYM_PATH = $(CURR_DIR)/build/ios.xcarchive/dSYMs/
-TVOS_ARCHIVE_DSYM_PATH = $(CURR_DIR)/build/tvos.xcarchive/dSYMs/
+# Modules built directly from Package.swift (SPM) for release archiving, no CocoaPods
+# involved. Each module gets its own archive path since xcodebuild archive against an SPM
+# scheme (unlike the legacy AEP-All aggregate scheme) only produces one module per archive.
+SPM_ARCHIVE_MODULES = $(AEPSERVICES_TARGET_NAME) $(AEPCORE_TARGET_NAME) $(AEPLIFECYCLE_TARGET_NAME) $(AEPIDENTITY_TARGET_NAME) $(AEPSIGNAL_TARGET_NAME) $(AEPRULESENGINE_TARGET_NAME)
 NC='\033[0m'
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -115,62 +111,64 @@ ci-pod-install:
 	bundle exec pod install --repo-update
 
 # Targets - archive
+#
+# These build the release xcframeworks directly from Package.swift (SPM), with no
+# CocoaPods involved at all -- unlike the test targets above, which still build via the
+# legacy AEPCore.xcworkspace/CocoaPods-linked project for now.
 
-archive: pod-install _archive
+archive: _archive
 
-archive-ios: pod-install _archive-ios
+archive-ios: _archive-ios
 
-ci-archive: ci-pod-install _archive
+ci-archive: _archive
 
-ci-archive-ios: ci-pod-install _archive-ios
+ci-archive-ios: _archive-ios
 
 _archive: clean build-ios build-tvos
-	xcodebuild -create-xcframework -framework $(SIMULATOR_ARCHIVE_PATH)$(AEPSERVICES_TARGET_NAME).framework -debug-symbols $(SIMULATOR_ARCHIVE_DSYM_PATH)$(AEPSERVICES_TARGET_NAME).framework.dSYM \
-	-framework $(TVOS_SIMULATOR_ARCHIVE_PATH)$(AEPSERVICES_TARGET_NAME).framework -debug-symbols $(TVOS_SIMULATOR_ARCHIVE_DSYM_PATH)$(AEPSERVICES_TARGET_NAME).framework.dSYM \
-	-framework $(IOS_ARCHIVE_PATH)$(AEPSERVICES_TARGET_NAME).framework -debug-symbols $(IOS_ARCHIVE_DSYM_PATH)$(AEPSERVICES_TARGET_NAME).framework.dSYM \
-	-framework $(TVOS_ARCHIVE_PATH)$(AEPSERVICES_TARGET_NAME).framework -debug-symbols $(TVOS_ARCHIVE_DSYM_PATH)$(AEPSERVICES_TARGET_NAME).framework.dSYM -output ./build/$(AEPSERVICES_TARGET_NAME).xcframework
-	xcodebuild -create-xcframework -framework $(SIMULATOR_ARCHIVE_PATH)$(AEPCORE_TARGET_NAME).framework -debug-symbols $(SIMULATOR_ARCHIVE_DSYM_PATH)$(AEPCORE_TARGET_NAME).framework.dSYM \
-	-framework $(TVOS_SIMULATOR_ARCHIVE_PATH)$(AEPCORE_TARGET_NAME).framework -debug-symbols $(TVOS_SIMULATOR_ARCHIVE_DSYM_PATH)$(AEPCORE_TARGET_NAME).framework.dSYM \
-	-framework $(IOS_ARCHIVE_PATH)$(AEPCORE_TARGET_NAME).framework -debug-symbols $(IOS_ARCHIVE_DSYM_PATH)$(AEPCORE_TARGET_NAME).framework.dSYM \
-	-framework $(TVOS_ARCHIVE_PATH)$(AEPCORE_TARGET_NAME).framework -debug-symbols $(TVOS_ARCHIVE_DSYM_PATH)$(AEPCORE_TARGET_NAME).framework.dSYM -output ./build/$(AEPCORE_TARGET_NAME).xcframework
-	xcodebuild -create-xcframework -framework $(SIMULATOR_ARCHIVE_PATH)$(AEPLIFECYCLE_TARGET_NAME).framework -debug-symbols $(SIMULATOR_ARCHIVE_DSYM_PATH)$(AEPLIFECYCLE_TARGET_NAME).framework.dSYM \
-	-framework $(TVOS_SIMULATOR_ARCHIVE_PATH)$(AEPLIFECYCLE_TARGET_NAME).framework -debug-symbols $(TVOS_SIMULATOR_ARCHIVE_DSYM_PATH)$(AEPLIFECYCLE_TARGET_NAME).framework.dSYM \
-	-framework $(IOS_ARCHIVE_PATH)$(AEPLIFECYCLE_TARGET_NAME).framework -debug-symbols $(IOS_ARCHIVE_DSYM_PATH)$(AEPLIFECYCLE_TARGET_NAME).framework.dSYM \
-	-framework $(TVOS_ARCHIVE_PATH)$(AEPLIFECYCLE_TARGET_NAME).framework -debug-symbols $(TVOS_ARCHIVE_DSYM_PATH)$(AEPLIFECYCLE_TARGET_NAME).framework.dSYM -output ./build/$(AEPLIFECYCLE_TARGET_NAME).xcframework
-	xcodebuild -create-xcframework -framework $(SIMULATOR_ARCHIVE_PATH)$(AEPIDENTITY_TARGET_NAME).framework -debug-symbols $(SIMULATOR_ARCHIVE_DSYM_PATH)$(AEPIDENTITY_TARGET_NAME).framework.dSYM \
-	-framework $(TVOS_SIMULATOR_ARCHIVE_PATH)$(AEPIDENTITY_TARGET_NAME).framework -debug-symbols $(TVOS_SIMULATOR_ARCHIVE_DSYM_PATH)$(AEPIDENTITY_TARGET_NAME).framework.dSYM \
-	-framework $(IOS_ARCHIVE_PATH)$(AEPIDENTITY_TARGET_NAME).framework -debug-symbols $(IOS_ARCHIVE_DSYM_PATH)$(AEPIDENTITY_TARGET_NAME).framework.dSYM \
-	-framework $(TVOS_ARCHIVE_PATH)$(AEPIDENTITY_TARGET_NAME).framework -debug-symbols $(TVOS_ARCHIVE_DSYM_PATH)$(AEPIDENTITY_TARGET_NAME).framework.dSYM -output ./build/$(AEPIDENTITY_TARGET_NAME).xcframework
-	xcodebuild -create-xcframework -framework $(SIMULATOR_ARCHIVE_PATH)$(AEPSIGNAL_TARGET_NAME).framework -debug-symbols $(SIMULATOR_ARCHIVE_DSYM_PATH)$(AEPSIGNAL_TARGET_NAME).framework.dSYM \
-	-framework $(TVOS_SIMULATOR_ARCHIVE_PATH)$(AEPSIGNAL_TARGET_NAME).framework -debug-symbols $(TVOS_SIMULATOR_ARCHIVE_DSYM_PATH)$(AEPSIGNAL_TARGET_NAME).framework.dSYM \
-	-framework $(IOS_ARCHIVE_PATH)$(AEPSIGNAL_TARGET_NAME).framework -debug-symbols $(IOS_ARCHIVE_DSYM_PATH)$(AEPSIGNAL_TARGET_NAME).framework.dSYM \
-	-framework $(TVOS_ARCHIVE_PATH)$(AEPSIGNAL_TARGET_NAME).framework -debug-symbols $(TVOS_ARCHIVE_DSYM_PATH)$(AEPSIGNAL_TARGET_NAME).framework.dSYM -output ./build/$(AEPSIGNAL_TARGET_NAME).xcframework
-	xcodebuild -create-xcframework -framework $(SIMULATOR_ARCHIVE_PATH)$(AEPRULESENGINE_TARGET_NAME).framework -debug-symbols $(SIMULATOR_ARCHIVE_DSYM_PATH)$(AEPRULESENGINE_TARGET_NAME).framework.dSYM \
-	-framework $(TVOS_SIMULATOR_ARCHIVE_PATH)$(AEPRULESENGINE_TARGET_NAME).framework -debug-symbols $(TVOS_SIMULATOR_ARCHIVE_DSYM_PATH)$(AEPRULESENGINE_TARGET_NAME).framework.dSYM \
-	-framework $(IOS_ARCHIVE_PATH)$(AEPRULESENGINE_TARGET_NAME).framework -debug-symbols $(IOS_ARCHIVE_DSYM_PATH)$(AEPRULESENGINE_TARGET_NAME).framework.dSYM \
-	-framework $(TVOS_ARCHIVE_PATH)$(AEPRULESENGINE_TARGET_NAME).framework -debug-symbols $(TVOS_ARCHIVE_DSYM_PATH)$(AEPRULESENGINE_TARGET_NAME).framework.dSYM -output ./build/$(AEPRULESENGINE_TARGET_NAME).xcframework
+	@set -eo pipefail; \
+	for module in $(SPM_ARCHIVE_MODULES); do \
+		echo "Creating xcframework for $$module (iOS + tvOS)..."; \
+		xcodebuild -create-xcframework \
+			-framework ./build/$$module-ios_simulator.xcarchive/Products/Library/Frameworks/$$module.framework \
+			-debug-symbols $(CURR_DIR)/build/$$module-ios_simulator.xcarchive/dSYMs/$$module.framework.dSYM \
+			-framework ./build/$$module-tvos_simulator.xcarchive/Products/Library/Frameworks/$$module.framework \
+			-debug-symbols $(CURR_DIR)/build/$$module-tvos_simulator.xcarchive/dSYMs/$$module.framework.dSYM \
+			-framework ./build/$$module-ios.xcarchive/Products/Library/Frameworks/$$module.framework \
+			-debug-symbols $(CURR_DIR)/build/$$module-ios.xcarchive/dSYMs/$$module.framework.dSYM \
+			-framework ./build/$$module-tvos.xcarchive/Products/Library/Frameworks/$$module.framework \
+			-debug-symbols $(CURR_DIR)/build/$$module-tvos.xcarchive/dSYMs/$$module.framework.dSYM \
+			-output ./build/$$module.xcframework; \
+	done
 
 _archive-ios: clean build-ios
-	xcodebuild -create-xcframework -framework $(SIMULATOR_ARCHIVE_PATH)$(AEPSERVICES_TARGET_NAME).framework -debug-symbols $(SIMULATOR_ARCHIVE_DSYM_PATH)$(AEPSERVICES_TARGET_NAME).framework.dSYM \
-	-framework $(IOS_ARCHIVE_PATH)$(AEPSERVICES_TARGET_NAME).framework -debug-symbols $(IOS_ARCHIVE_DSYM_PATH)$(AEPSERVICES_TARGET_NAME).framework.dSYM -output ./build/$(AEPSERVICES_TARGET_NAME).xcframework
-	xcodebuild -create-xcframework -framework $(SIMULATOR_ARCHIVE_PATH)$(AEPCORE_TARGET_NAME).framework -debug-symbols $(SIMULATOR_ARCHIVE_DSYM_PATH)$(AEPCORE_TARGET_NAME).framework.dSYM \
-	-framework $(IOS_ARCHIVE_PATH)$(AEPCORE_TARGET_NAME).framework -debug-symbols $(IOS_ARCHIVE_DSYM_PATH)$(AEPCORE_TARGET_NAME).framework.dSYM -output ./build/$(AEPCORE_TARGET_NAME).xcframework
-	xcodebuild -create-xcframework -framework $(SIMULATOR_ARCHIVE_PATH)$(AEPLIFECYCLE_TARGET_NAME).framework -debug-symbols $(SIMULATOR_ARCHIVE_DSYM_PATH)$(AEPLIFECYCLE_TARGET_NAME).framework.dSYM \
-	-framework $(IOS_ARCHIVE_PATH)$(AEPLIFECYCLE_TARGET_NAME).framework -debug-symbols $(IOS_ARCHIVE_DSYM_PATH)$(AEPLIFECYCLE_TARGET_NAME).framework.dSYM -output ./build/$(AEPLIFECYCLE_TARGET_NAME).xcframework
-	xcodebuild -create-xcframework -framework $(SIMULATOR_ARCHIVE_PATH)$(AEPIDENTITY_TARGET_NAME).framework -debug-symbols $(SIMULATOR_ARCHIVE_DSYM_PATH)$(AEPIDENTITY_TARGET_NAME).framework.dSYM \
-	-framework $(IOS_ARCHIVE_PATH)$(AEPIDENTITY_TARGET_NAME).framework -debug-symbols $(IOS_ARCHIVE_DSYM_PATH)$(AEPIDENTITY_TARGET_NAME).framework.dSYM -output ./build/$(AEPIDENTITY_TARGET_NAME).xcframework
-	xcodebuild -create-xcframework -framework $(SIMULATOR_ARCHIVE_PATH)$(AEPSIGNAL_TARGET_NAME).framework -debug-symbols $(SIMULATOR_ARCHIVE_DSYM_PATH)$(AEPSIGNAL_TARGET_NAME).framework.dSYM \
-	-framework $(IOS_ARCHIVE_PATH)$(AEPSIGNAL_TARGET_NAME).framework -debug-symbols $(IOS_ARCHIVE_DSYM_PATH)$(AEPSIGNAL_TARGET_NAME).framework.dSYM -output ./build/$(AEPSIGNAL_TARGET_NAME).xcframework
-	xcodebuild -create-xcframework -framework $(SIMULATOR_ARCHIVE_PATH)$(AEPRULESENGINE_TARGET_NAME).framework -debug-symbols $(SIMULATOR_ARCHIVE_DSYM_PATH)$(AEPRULESENGINE_TARGET_NAME).framework.dSYM \
-	-framework $(IOS_ARCHIVE_PATH)$(AEPRULESENGINE_TARGET_NAME).framework -debug-symbols $(IOS_ARCHIVE_DSYM_PATH)$(AEPRULESENGINE_TARGET_NAME).framework.dSYM -output ./build/$(AEPRULESENGINE_TARGET_NAME).xcframework
+	@set -eo pipefail; \
+	for module in $(SPM_ARCHIVE_MODULES); do \
+		echo "Creating xcframework for $$module (iOS only)..."; \
+		xcodebuild -create-xcframework \
+			-framework ./build/$$module-ios_simulator.xcarchive/Products/Library/Frameworks/$$module.framework \
+			-debug-symbols $(CURR_DIR)/build/$$module-ios_simulator.xcarchive/dSYMs/$$module.framework.dSYM \
+			-framework ./build/$$module-ios.xcarchive/Products/Library/Frameworks/$$module.framework \
+			-debug-symbols $(CURR_DIR)/build/$$module-ios.xcarchive/dSYMs/$$module.framework.dSYM \
+			-output ./build/$$module.xcframework; \
+	done
 
 build-ios:
-	xcodebuild archive -workspace AEPCore.xcworkspace -scheme AEP-All -archivePath "./build/ios.xcarchive" -sdk iphoneos -destination="iOS" SKIP_INSTALL=NO BUILD_LIBRARY_FOR_DISTRIBUTION=YES
-	xcodebuild archive -workspace AEPCore.xcworkspace -scheme AEP-All -archivePath "./build/ios_simulator.xcarchive" -sdk iphonesimulator -destination="iOS Simulator" SKIP_INSTALL=NO BUILD_LIBRARY_FOR_DISTRIBUTION=YES
+	@set -eo pipefail; \
+	for module in $(SPM_ARCHIVE_MODULES); do \
+		echo "Archiving $$module for iOS device..."; \
+		xcodebuild archive -scheme $$module -archivePath "./build/$$module-ios.xcarchive" -sdk iphoneos -destination="iOS" SKIP_INSTALL=NO BUILD_LIBRARY_FOR_DISTRIBUTION=YES; \
+		echo "Archiving $$module for iOS simulator..."; \
+		xcodebuild archive -scheme $$module -archivePath "./build/$$module-ios_simulator.xcarchive" -sdk iphonesimulator -destination="iOS Simulator" SKIP_INSTALL=NO BUILD_LIBRARY_FOR_DISTRIBUTION=YES; \
+	done
 
 build-tvos:
-	xcodebuild archive -workspace AEPCore.xcworkspace -scheme AEP-All -archivePath "./build/tvos.xcarchive" -sdk appletvos -destination="tvOS" SKIP_INSTALL=NO BUILD_LIBRARY_FOR_DISTRIBUTION=YES
-	xcodebuild archive -workspace AEPCore.xcworkspace -scheme AEP-All -archivePath "./build/tvos_simulator.xcarchive" -sdk appletvsimulator -destination="tvOS Simulator" SKIP_INSTALL=NO BUILD_LIBRARY_FOR_DISTRIBUTION=YES
+	@set -eo pipefail; \
+	for module in $(SPM_ARCHIVE_MODULES); do \
+		echo "Archiving $$module for tvOS device..."; \
+		xcodebuild archive -scheme $$module -archivePath "./build/$$module-tvos.xcarchive" -sdk appletvos -destination="tvOS" SKIP_INSTALL=NO BUILD_LIBRARY_FOR_DISTRIBUTION=YES; \
+		echo "Archiving $$module for tvOS simulator..."; \
+		xcodebuild archive -scheme $$module -archivePath "./build/$$module-tvos_simulator.xcarchive" -sdk appletvsimulator -destination="tvOS Simulator" SKIP_INSTALL=NO BUILD_LIBRARY_FOR_DISTRIBUTION=YES; \
+	done
 
 zip:
 	cd build && zip -r -X $(AEPCORE_TARGET_NAME).xcframework.zip $(AEPCORE_TARGET_NAME).xcframework/
@@ -217,26 +215,6 @@ latest-version:
 	(echo "AEPLifecycle - " && pod spec cat AEPLifecycle | jq '.version' | tr -d '"')
 	(echo "AEPSignal - " && pod spec cat AEPSignal | jq '.version' | tr -d '"')
 
-version-podspec-local:
-	(which jq)
-	(echo "AEPServices - ${BLUE}$(shell pod ipc spec AEPServices.podspec | jq '.version' | tr -d '"')${NC}")
-	(echo "AEPCore - ${BLUE}$(shell pod ipc spec AEPCore.podspec | jq '.version' | tr -d '"')${NC}")
-	(echo "AEPIdentity - ${BLUE}$(shell pod ipc spec AEPIdentity.podspec | jq '.version' | tr -d '"')${NC}")
-	(echo "AEPLifecycle - ${BLUE}$(shell pod ipc spec AEPLifecycle.podspec | jq '.version' | tr -d '"')${NC}")
-	(echo "AEPSignal - ${BLUE}$(shell pod ipc spec AEPSignal.podspec | jq '.version' | tr -d '"')${NC}")
-	
-podspec-local-dependency-version:
-	(which jq)
-	(echo "AEPCore:")
-	(echo " -AEPService: $(shell pod ipc spec AEPCore.podspec | jq '.dependencies.AEPServices[0]'| tr -d '"')")
-	(echo " -AEPRulesEngine: $(shell pod ipc spec AEPCore.podspec | jq '.dependencies.AEPRulesEngine[0]'| tr -d '"')")
-	(echo "AEPIdentity:")
-	(echo " -AEPCore: $(shell pod ipc spec AEPIdentity.podspec | jq '.dependencies.AEPCore[0]'| tr -d '"')")
-	(echo "AEPLifecycle:")
-	(echo " -AEPCore: $(shell pod ipc spec AEPLifecycle.podspec | jq '.dependencies.AEPCore[0]'| tr -d '"')")
-	(echo "AEPSignal:")
-	(echo " -AEPCore: $(shell pod ipc spec AEPSignal.podspec | jq '.dependencies.AEPCore[0]'| tr -d '"')")
-
 version-source-code:
 	(echo "AEPCore - ${BLUE}$(shell cat ./AEPCore/Sources/configuration/ConfigurationConstants.swift | egrep '\s*EXTENSION_VERSION\s*=\s*\"(.*)\"' | ruby -e "puts gets.scan(/\"(.*)\"/)[0] " | tr -d '"')${NC}")
 	(echo "AEPIdentity - ${BLUE}$(shell cat ./AEPIdentity/Sources/IdentityConstants.swift | egrep '\s*EXTENSION_VERSION\s*=\s*\"(.*)\"' | ruby -e "puts gets.scan(/\"(.*)\"/)[0] " | tr -d '"')${NC}")
@@ -246,14 +224,8 @@ version-source-code:
 test-SPM-integration:
 	(sh ./Script/test-SPM.sh)
 
-test-podspec:
-	(sh ./Script/test-podspec.sh)
-
 test-podspec-testutils:
 	(sh ./Script/test-podspec-testutils.sh)
-
-pod-lint:
-	(pod lib lint --allow-warnings --verbose --swift-version=5.1)
 
 api-check:
 	(sh ./Script/api-check.sh  --check --platform ios)
