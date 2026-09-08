@@ -152,22 +152,34 @@ _archive-ios: clean build-ios
 			-output ./build/$$module.xcframework; \
 	done
 
+# Both targets below temporarily move the legacy Xcode project/workspace out of the way
+# so xcodebuild's auto-detection has no ambiguous container to pick between (with both
+# present, plain `xcodebuild -scheme <Module>` silently resolved to the legacy project's
+# scheme instead of Package.swift's). Restored via `trap ... EXIT` even if the build fails,
+# since the test targets earlier in this Makefile still need them.
+
 build-ios:
 	@set -eo pipefail; \
+	mv AEPCore.xcodeproj .AEPCore.xcodeproj.bak; \
+	mv AEPCore.xcworkspace .AEPCore.xcworkspace.bak; \
+	trap 'mv .AEPCore.xcodeproj.bak AEPCore.xcodeproj; mv .AEPCore.xcworkspace.bak AEPCore.xcworkspace' EXIT; \
 	for module in $(SPM_ARCHIVE_MODULES); do \
 		echo "Archiving $$module for iOS device..."; \
-		xcodebuild archive -workspace .swiftpm/xcode/package.xcworkspace -scheme $$module -archivePath "./build/$$module-ios.xcarchive" -sdk iphoneos -destination="iOS" SKIP_INSTALL=NO BUILD_LIBRARY_FOR_DISTRIBUTION=YES; \
+		xcodebuild archive -scheme $$module -archivePath "./build/$$module-ios.xcarchive" -sdk iphoneos -destination="iOS" SKIP_INSTALL=NO BUILD_LIBRARY_FOR_DISTRIBUTION=YES; \
 		echo "Archiving $$module for iOS simulator..."; \
-		xcodebuild archive -workspace .swiftpm/xcode/package.xcworkspace -scheme $$module -archivePath "./build/$$module-ios_simulator.xcarchive" -sdk iphonesimulator -destination="iOS Simulator" SKIP_INSTALL=NO BUILD_LIBRARY_FOR_DISTRIBUTION=YES; \
+		xcodebuild archive -scheme $$module -archivePath "./build/$$module-ios_simulator.xcarchive" -sdk iphonesimulator -destination="iOS Simulator" SKIP_INSTALL=NO BUILD_LIBRARY_FOR_DISTRIBUTION=YES; \
 	done
 
 build-tvos:
 	@set -eo pipefail; \
+	mv AEPCore.xcodeproj .AEPCore.xcodeproj.bak; \
+	mv AEPCore.xcworkspace .AEPCore.xcworkspace.bak; \
+	trap 'mv .AEPCore.xcodeproj.bak AEPCore.xcodeproj; mv .AEPCore.xcworkspace.bak AEPCore.xcworkspace' EXIT; \
 	for module in $(SPM_ARCHIVE_MODULES); do \
 		echo "Archiving $$module for tvOS device..."; \
-		xcodebuild archive -workspace .swiftpm/xcode/package.xcworkspace -scheme $$module -archivePath "./build/$$module-tvos.xcarchive" -sdk appletvos -destination="tvOS" SKIP_INSTALL=NO BUILD_LIBRARY_FOR_DISTRIBUTION=YES; \
+		xcodebuild archive -scheme $$module -archivePath "./build/$$module-tvos.xcarchive" -sdk appletvos -destination="tvOS" SKIP_INSTALL=NO BUILD_LIBRARY_FOR_DISTRIBUTION=YES; \
 		echo "Archiving $$module for tvOS simulator..."; \
-		xcodebuild archive -workspace .swiftpm/xcode/package.xcworkspace -scheme $$module -archivePath "./build/$$module-tvos_simulator.xcarchive" -sdk appletvsimulator -destination="tvOS Simulator" SKIP_INSTALL=NO BUILD_LIBRARY_FOR_DISTRIBUTION=YES; \
+		xcodebuild archive -scheme $$module -archivePath "./build/$$module-tvos_simulator.xcarchive" -sdk appletvsimulator -destination="tvOS Simulator" SKIP_INSTALL=NO BUILD_LIBRARY_FOR_DISTRIBUTION=YES; \
 	done
 
 zip:
