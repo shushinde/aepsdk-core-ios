@@ -13,6 +13,10 @@ AEPINTEGRATION_TEST_TARGET_NAME = AEPIntegrationTests
 # involved. Each module gets its own archive path since xcodebuild archive against an SPM
 # scheme (unlike the legacy AEP-All aggregate scheme) only produces one module per archive.
 SPM_ARCHIVE_MODULES = $(AEPSERVICES_TARGET_NAME) $(AEPCORE_TARGET_NAME) $(AEPLIFECYCLE_TARGET_NAME) $(AEPIDENTITY_TARGET_NAME) $(AEPSIGNAL_TARGET_NAME) $(AEPRULESENGINE_TARGET_NAME)
+# AEPRulesEngine is an external SPM dependency (not a product of this package), so it gets
+# no auto-generated scheme here -- it must be archived from its own resolved checkout,
+# where it IS the root package.
+SPM_OWN_MODULES = $(AEPSERVICES_TARGET_NAME) $(AEPCORE_TARGET_NAME) $(AEPLIFECYCLE_TARGET_NAME) $(AEPIDENTITY_TARGET_NAME) $(AEPSIGNAL_TARGET_NAME)
 NC='\033[0m'
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -163,24 +167,36 @@ build-ios:
 	mv AEPCore.xcodeproj .AEPCore.xcodeproj.bak; \
 	mv AEPCore.xcworkspace .AEPCore.xcworkspace.bak; \
 	trap 'mv .AEPCore.xcodeproj.bak AEPCore.xcodeproj; mv .AEPCore.xcworkspace.bak AEPCore.xcworkspace' EXIT; \
-	for module in $(SPM_ARCHIVE_MODULES); do \
+	for module in $(SPM_OWN_MODULES); do \
 		echo "Archiving $$module for iOS device..."; \
 		xcodebuild archive -scheme $$module -archivePath "./build/$$module-ios.xcarchive" -destination "generic/platform=iOS" SKIP_INSTALL=NO BUILD_LIBRARY_FOR_DISTRIBUTION=YES; \
 		echo "Archiving $$module for iOS simulator..."; \
 		xcodebuild archive -scheme $$module -archivePath "./build/$$module-ios_simulator.xcarchive" -destination "generic/platform=iOS Simulator" SKIP_INSTALL=NO BUILD_LIBRARY_FOR_DISTRIBUTION=YES; \
-	done
+	done; \
+	RULESENGINE_CHECKOUT=$$(find .build/checkouts -maxdepth 1 -type d -iname "*rulesengine*" | head -1); \
+	if [ -z "$$RULESENGINE_CHECKOUT" ]; then echo "Could not find resolved AEPRulesEngine checkout under .build/checkouts"; exit 1; fi; \
+	echo "Archiving $(AEPRULESENGINE_TARGET_NAME) for iOS device from $$RULESENGINE_CHECKOUT..."; \
+	(cd "$$RULESENGINE_CHECKOUT" && xcodebuild archive -scheme $(AEPRULESENGINE_TARGET_NAME) -archivePath "$(CURR_DIR)/build/$(AEPRULESENGINE_TARGET_NAME)-ios.xcarchive" -destination "generic/platform=iOS" SKIP_INSTALL=NO BUILD_LIBRARY_FOR_DISTRIBUTION=YES); \
+	echo "Archiving $(AEPRULESENGINE_TARGET_NAME) for iOS simulator from $$RULESENGINE_CHECKOUT..."; \
+	(cd "$$RULESENGINE_CHECKOUT" && xcodebuild archive -scheme $(AEPRULESENGINE_TARGET_NAME) -archivePath "$(CURR_DIR)/build/$(AEPRULESENGINE_TARGET_NAME)-ios_simulator.xcarchive" -destination "generic/platform=iOS Simulator" SKIP_INSTALL=NO BUILD_LIBRARY_FOR_DISTRIBUTION=YES)
 
 build-tvos:
 	@set -eo pipefail; \
 	mv AEPCore.xcodeproj .AEPCore.xcodeproj.bak; \
 	mv AEPCore.xcworkspace .AEPCore.xcworkspace.bak; \
 	trap 'mv .AEPCore.xcodeproj.bak AEPCore.xcodeproj; mv .AEPCore.xcworkspace.bak AEPCore.xcworkspace' EXIT; \
-	for module in $(SPM_ARCHIVE_MODULES); do \
+	for module in $(SPM_OWN_MODULES); do \
 		echo "Archiving $$module for tvOS device..."; \
 		xcodebuild archive -scheme $$module -archivePath "./build/$$module-tvos.xcarchive" -destination "generic/platform=tvOS" SKIP_INSTALL=NO BUILD_LIBRARY_FOR_DISTRIBUTION=YES; \
 		echo "Archiving $$module for tvOS simulator..."; \
 		xcodebuild archive -scheme $$module -archivePath "./build/$$module-tvos_simulator.xcarchive" -destination "generic/platform=tvOS Simulator" SKIP_INSTALL=NO BUILD_LIBRARY_FOR_DISTRIBUTION=YES; \
-	done
+	done; \
+	RULESENGINE_CHECKOUT=$$(find .build/checkouts -maxdepth 1 -type d -iname "*rulesengine*" | head -1); \
+	if [ -z "$$RULESENGINE_CHECKOUT" ]; then echo "Could not find resolved AEPRulesEngine checkout under .build/checkouts"; exit 1; fi; \
+	echo "Archiving $(AEPRULESENGINE_TARGET_NAME) for tvOS device from $$RULESENGINE_CHECKOUT..."; \
+	(cd "$$RULESENGINE_CHECKOUT" && xcodebuild archive -scheme $(AEPRULESENGINE_TARGET_NAME) -archivePath "$(CURR_DIR)/build/$(AEPRULESENGINE_TARGET_NAME)-tvos.xcarchive" -destination "generic/platform=tvOS" SKIP_INSTALL=NO BUILD_LIBRARY_FOR_DISTRIBUTION=YES); \
+	echo "Archiving $(AEPRULESENGINE_TARGET_NAME) for tvOS simulator from $$RULESENGINE_CHECKOUT..."; \
+	(cd "$$RULESENGINE_CHECKOUT" && xcodebuild archive -scheme $(AEPRULESENGINE_TARGET_NAME) -archivePath "$(CURR_DIR)/build/$(AEPRULESENGINE_TARGET_NAME)-tvos_simulator.xcarchive" -destination "generic/platform=tvOS Simulator" SKIP_INSTALL=NO BUILD_LIBRARY_FOR_DISTRIBUTION=YES)
 
 zip:
 	cd build && zip -r -X $(AEPCORE_TARGET_NAME).xcframework.zip $(AEPCORE_TARGET_NAME).xcframework/
