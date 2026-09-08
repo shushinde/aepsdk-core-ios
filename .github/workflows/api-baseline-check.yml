@@ -14,9 +14,62 @@ name: API Baseline Check
 
 on:
   pull_request:
+  issue_comment:
+    types: [created]
 
 jobs:
-  check-api-baseline:
+  # Runs automatically on every PR push.
+  check-on-pr:
+    if: github.event_name == 'pull_request'
     # --- Pilot testing (this fork only) ---
     uses: shushinde/aepsdk-commons/.github/workflows/ios-api-baseline-check.yml@spm-binary-migration
+    secrets: inherit
+
+  # Lets a maintainer manually re-trigger the check by commenting "/recheck-api-baseline"
+  # on a PR (e.g. after force-pushing, or if a transient CI failure needs a retry) -
+  # GitHub has no built-in generic keyword for this, only the reusable workflow_call path.
+  resolve-pr-from-comment:
+    if: >
+      github.event_name == 'issue_comment' &&
+      github.event.issue.pull_request != null &&
+      contains(github.event.comment.body, '/recheck-api-baseline')
+    runs-on: ubuntu-24.04
+    outputs:
+      pr-number: ${{ steps.pr.outputs.number }}
+      head-sha: ${{ steps.pr.outputs.sha }}
+      head-ref: ${{ steps.pr.outputs.ref }}
+      head-repo: ${{ steps.pr.outputs.repo }}
+    steps:
+      - name: React to comment
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api "repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions" \
+            -f content='+1' > /dev/null
+
+      - name: Resolve PR head
+        id: pr
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -eo pipefail
+          DATA=$(gh pr view "${{ github.event.issue.number }}" --repo "${{ github.repository }}" \
+            --json number,headRefName,headRefOid,headRepository,headRepositoryOwner)
+          echo "number=$(echo "$DATA" | jq -r '.number')" >> "$GITHUB_OUTPUT"
+          echo "sha=$(echo "$DATA" | jq -r '.headRefOid')" >> "$GITHUB_OUTPUT"
+          echo "ref=$(echo "$DATA" | jq -r '.headRefName')" >> "$GITHUB_OUTPUT"
+          OWNER=$(echo "$DATA" | jq -r '.headRepositoryOwner.login')
+          REPO=$(echo "$DATA" | jq -r '.headRepository.name')
+          echo "repo=${OWNER}/${REPO}" >> "$GITHUB_OUTPUT"
+
+  check-on-comment:
+    needs: resolve-pr-from-comment
+    if: needs.resolve-pr-from-comment.outputs.pr-number != ''
+    # --- Pilot testing (this fork only) ---
+    uses: shushinde/aepsdk-commons/.github/workflows/ios-api-baseline-check.yml@spm-binary-migration
+    with:
+      pr-number: ${{ needs.resolve-pr-from-comment.outputs.pr-number }}
+      head-sha: ${{ needs.resolve-pr-from-comment.outputs.head-sha }}
+      head-ref: ${{ needs.resolve-pr-from-comment.outputs.head-ref }}
+      head-repo: ${{ needs.resolve-pr-from-comment.outputs.head-repo }}
     secrets: inherit
