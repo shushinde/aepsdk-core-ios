@@ -65,3 +65,4 @@ enum RulesDownloaderConstants {
         static let RULES_CACHE_PREFIX = "cached.rules."
     }
 }
+// trivial test comment #2 for skip-ci loop-prevention test
