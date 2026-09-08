@@ -173,7 +173,7 @@ build-ios:
 		echo "Archiving $$module for iOS simulator..."; \
 		xcodebuild archive -scheme $$module -archivePath "./build/$$module-ios_simulator.xcarchive" -destination "generic/platform=iOS Simulator" SKIP_INSTALL=NO BUILD_LIBRARY_FOR_DISTRIBUTION=YES; \
 	done; \
-	RULESENGINE_CHECKOUT=$$(find .build/checkouts -maxdepth 1 -type d -iname "*rulesengine*" | head -1); \
+	RULESENGINE_CHECKOUT=$$(find ~/Library/Developer/Xcode/DerivedData -maxdepth 6 -type d -ipath "*SourcePackages/checkouts*rulesengine*" 2>/dev/null | head -1); \
 	if [ -z "$$RULESENGINE_CHECKOUT" ]; then echo "Could not find resolved AEPRulesEngine checkout under .build/checkouts"; exit 1; fi; \
 	echo "Archiving $(AEPRULESENGINE_TARGET_NAME) for iOS device from $$RULESENGINE_CHECKOUT..."; \
 	(cd "$$RULESENGINE_CHECKOUT" && xcodebuild archive -scheme $(AEPRULESENGINE_TARGET_NAME) -archivePath "$(CURR_DIR)/build/$(AEPRULESENGINE_TARGET_NAME)-ios.xcarchive" -destination "generic/platform=iOS" SKIP_INSTALL=NO BUILD_LIBRARY_FOR_DISTRIBUTION=YES); \
@@ -191,7 +191,7 @@ build-tvos:
 		echo "Archiving $$module for tvOS simulator..."; \
 		xcodebuild archive -scheme $$module -archivePath "./build/$$module-tvos_simulator.xcarchive" -destination "generic/platform=tvOS Simulator" SKIP_INSTALL=NO BUILD_LIBRARY_FOR_DISTRIBUTION=YES; \
 	done; \
-	RULESENGINE_CHECKOUT=$$(find .build/checkouts -maxdepth 1 -type d -iname "*rulesengine*" | head -1); \
+	RULESENGINE_CHECKOUT=$$(find ~/Library/Developer/Xcode/DerivedData -maxdepth 6 -type d -ipath "*SourcePackages/checkouts*rulesengine*" 2>/dev/null | head -1); \
 	if [ -z "$$RULESENGINE_CHECKOUT" ]; then echo "Could not find resolved AEPRulesEngine checkout under .build/checkouts"; exit 1; fi; \
 	echo "Archiving $(AEPRULESENGINE_TARGET_NAME) for tvOS device from $$RULESENGINE_CHECKOUT..."; \
 	(cd "$$RULESENGINE_CHECKOUT" && xcodebuild archive -scheme $(AEPRULESENGINE_TARGET_NAME) -archivePath "$(CURR_DIR)/build/$(AEPRULESENGINE_TARGET_NAME)-tvos.xcarchive" -destination "generic/platform=tvOS" SKIP_INSTALL=NO BUILD_LIBRARY_FOR_DISTRIBUTION=YES); \
