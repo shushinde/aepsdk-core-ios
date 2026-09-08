@@ -165,9 +165,9 @@ build-ios:
 	trap 'mv .AEPCore.xcodeproj.bak AEPCore.xcodeproj; mv .AEPCore.xcworkspace.bak AEPCore.xcworkspace' EXIT; \
 	for module in $(SPM_ARCHIVE_MODULES); do \
 		echo "Archiving $$module for iOS device..."; \
-		xcodebuild archive -scheme $$module -archivePath "./build/$$module-ios.xcarchive" -sdk iphoneos -destination="iOS" SKIP_INSTALL=NO BUILD_LIBRARY_FOR_DISTRIBUTION=YES; \
+		xcodebuild archive -scheme $$module -archivePath "./build/$$module-ios.xcarchive" -destination "generic/platform=iOS" SKIP_INSTALL=NO BUILD_LIBRARY_FOR_DISTRIBUTION=YES; \
 		echo "Archiving $$module for iOS simulator..."; \
-		xcodebuild archive -scheme $$module -archivePath "./build/$$module-ios_simulator.xcarchive" -sdk iphonesimulator -destination="iOS Simulator" SKIP_INSTALL=NO BUILD_LIBRARY_FOR_DISTRIBUTION=YES; \
+		xcodebuild archive -scheme $$module -archivePath "./build/$$module-ios_simulator.xcarchive" -destination "generic/platform=iOS Simulator" SKIP_INSTALL=NO BUILD_LIBRARY_FOR_DISTRIBUTION=YES; \
 	done
 
 build-tvos:
@@ -177,9 +177,9 @@ build-tvos:
 	trap 'mv .AEPCore.xcodeproj.bak AEPCore.xcodeproj; mv .AEPCore.xcworkspace.bak AEPCore.xcworkspace' EXIT; \
 	for module in $(SPM_ARCHIVE_MODULES); do \
 		echo "Archiving $$module for tvOS device..."; \
-		xcodebuild archive -scheme $$module -archivePath "./build/$$module-tvos.xcarchive" -sdk appletvos -destination="tvOS" SKIP_INSTALL=NO BUILD_LIBRARY_FOR_DISTRIBUTION=YES; \
+		xcodebuild archive -scheme $$module -archivePath "./build/$$module-tvos.xcarchive" -destination "generic/platform=tvOS" SKIP_INSTALL=NO BUILD_LIBRARY_FOR_DISTRIBUTION=YES; \
 		echo "Archiving $$module for tvOS simulator..."; \
-		xcodebuild archive -scheme $$module -archivePath "./build/$$module-tvos_simulator.xcarchive" -sdk appletvsimulator -destination="tvOS Simulator" SKIP_INSTALL=NO BUILD_LIBRARY_FOR_DISTRIBUTION=YES; \
+		xcodebuild archive -scheme $$module -archivePath "./build/$$module-tvos_simulator.xcarchive" -destination "generic/platform=tvOS Simulator" SKIP_INSTALL=NO BUILD_LIBRARY_FOR_DISTRIBUTION=YES; \
 	done
 
 zip:
