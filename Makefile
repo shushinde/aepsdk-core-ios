@@ -133,13 +133,13 @@ _archive: clean build-ios build-tvos
 	for module in $(SPM_ARCHIVE_MODULES); do \
 		echo "Creating xcframework for $$module (iOS + tvOS)..."; \
 		xcodebuild -create-xcframework \
-			-framework ./build/$$module-ios_simulator.xcarchive/Products/Library/Frameworks/$$module.framework \
+			-framework ./build/$$module-ios_simulator.xcarchive/Products/usr/local/lib/$$module.framework \
 			-debug-symbols $(CURR_DIR)/build/$$module-ios_simulator.xcarchive/dSYMs/$$module.framework.dSYM \
-			-framework ./build/$$module-tvos_simulator.xcarchive/Products/Library/Frameworks/$$module.framework \
+			-framework ./build/$$module-tvos_simulator.xcarchive/Products/usr/local/lib/$$module.framework \
 			-debug-symbols $(CURR_DIR)/build/$$module-tvos_simulator.xcarchive/dSYMs/$$module.framework.dSYM \
-			-framework ./build/$$module-ios.xcarchive/Products/Library/Frameworks/$$module.framework \
+			-framework ./build/$$module-ios.xcarchive/Products/usr/local/lib/$$module.framework \
 			-debug-symbols $(CURR_DIR)/build/$$module-ios.xcarchive/dSYMs/$$module.framework.dSYM \
-			-framework ./build/$$module-tvos.xcarchive/Products/Library/Frameworks/$$module.framework \
+			-framework ./build/$$module-tvos.xcarchive/Products/usr/local/lib/$$module.framework \
 			-debug-symbols $(CURR_DIR)/build/$$module-tvos.xcarchive/dSYMs/$$module.framework.dSYM \
 			-output ./build/$$module.xcframework; \
 	done
@@ -149,9 +149,9 @@ _archive-ios: clean build-ios
 	for module in $(SPM_ARCHIVE_MODULES); do \
 		echo "Creating xcframework for $$module (iOS only)..."; \
 		xcodebuild -create-xcframework \
-			-framework ./build/$$module-ios_simulator.xcarchive/Products/Library/Frameworks/$$module.framework \
+			-framework ./build/$$module-ios_simulator.xcarchive/Products/usr/local/lib/$$module.framework \
 			-debug-symbols $(CURR_DIR)/build/$$module-ios_simulator.xcarchive/dSYMs/$$module.framework.dSYM \
-			-framework ./build/$$module-ios.xcarchive/Products/Library/Frameworks/$$module.framework \
+			-framework ./build/$$module-ios.xcarchive/Products/usr/local/lib/$$module.framework \
 			-debug-symbols $(CURR_DIR)/build/$$module-ios.xcarchive/dSYMs/$$module.framework.dSYM \
 			-output ./build/$$module.xcframework; \
 	done
