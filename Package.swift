@@ -23,7 +23,9 @@ let package = Package(
         .library(name: "AEPIdentity", targets: ["AEPIdentity"]),
         .library(name: "AEPLifecycle", targets: ["AEPLifecycle"]),
         .library(name: "AEPServices", targets: ["AEPServices"]),
-        .library(name: "AEPSignal", targets: ["AEPSignal"])
+        .library(name: "AEPSignal", targets: ["AEPSignal"]),
+        // AUTO-GENERATED-BINARY-PRODUCTS:START
+        // AUTO-GENERATED-BINARY-PRODUCTS:END
     ],
     dependencies: [
         .package(url: "https://github.com/adobe/aepsdk-rulesengine-ios.git", .upToNextMajor(from: "5.0.0")),
@@ -49,5 +51,7 @@ let package = Package(
         .target(name: "AEPSignal",
                 dependencies: ["AEPCore"],
                 path: "AEPSignal/Sources"),
+        // AUTO-GENERATED-BINARY-TARGETS:START
+        // AUTO-GENERATED-BINARY-TARGETS:END
     ]
 )

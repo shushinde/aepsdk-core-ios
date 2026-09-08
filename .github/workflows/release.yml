@@ -93,12 +93,16 @@ jobs:
     needs: setup-configuration
     permissions:
         contents: write
-    uses: adobe/aepsdk-commons/.github/workflows/ios-release.yml@gha-ios-5.3.2
+    uses: shushinde/aepsdk-commons/.github/workflows/ios-release.yml@spm-binary-migration
     with:
       tag: ${{ github.event.inputs.tag }}
       create-github-release: ${{ github.event.inputs.create-github-release == 'true' && 'AEPServices, AEPCore, AEPIdentity, AEPLifecycle, AEPSignal' || '' }}
       release-dependency-frameworks: ${{ github.event.inputs.create-github-release == 'true' && 'AEPRulesEngine' || '' }}
       pod-publish-extensions: ${{ needs.setup-configuration.outputs.pod-publish-extensions }}
+      # --- Pilot binary-SPM testing (this fork only, not upstream behavior) ---
+      enable-binary-spm: true
+      commons-repo: 'shushinde/aepsdk-commons'
+      commons-ref: 'spm-binary-migration'
       version-validation-paths: > 
         AEPCore.xcodeproj/project.pbxproj, 
         AEPCore.podspec, 
