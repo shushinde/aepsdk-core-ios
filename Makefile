@@ -130,6 +130,9 @@ ci-archive-ios: _archive-ios
 
 _archive: clean build-ios build-tvos
 	@set -eo pipefail; \
+	echo "--- DEBUG: archive contents ---"; \
+	find ./build/$(AEPSERVICES_TARGET_NAME)-ios_simulator.xcarchive -maxdepth 6; \
+	echo "--- END DEBUG ---"; \
 	for module in $(SPM_ARCHIVE_MODULES); do \
 		echo "Creating xcframework for $$module (iOS + tvOS)..."; \
 		xcodebuild -create-xcframework \
