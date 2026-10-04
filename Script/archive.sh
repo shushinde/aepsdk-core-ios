@@ -32,6 +32,7 @@ archive_target() {
     -destination "$(destination_for "$platform" "$variant")" \
     -derivedDataPath "$DERIVED_DATA" \
     -clonedSourcePackagesDirPath "$SOURCE_PACKAGES" \
+    -skipPackagePluginValidation \
     SKIP_INSTALL=NO \
     BUILD_LIBRARY_FOR_DISTRIBUTION=YES \
     DEBUG_INFORMATION_FORMAT=dwarf-with-dsym
