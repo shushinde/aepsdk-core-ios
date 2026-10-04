@@ -21,13 +21,14 @@ destination_for() {
 
 archive_target() {
   local project=$1 module=$2 platform=$3 variant=$4
+  local scheme=${5:-$module}
   local suffix=""
   if [ "$variant" = "simulator" ]; then
     suffix="_simulator"
   fi
   xcodebuild archive \
     -project "$project" \
-    -scheme "$module" \
+    -scheme "$scheme" \
     -archivePath "$CURR_DIR/build/$module-$platform$suffix.xcarchive" \
     -destination "$(destination_for "$platform" "$variant")" \
     -derivedDataPath "$DERIVED_DATA" \
@@ -60,6 +61,7 @@ prepare_rulesengine_project() {
     exit 1
   fi
 
+  mkdir -p "$project_dir" || return 1
   cat > "$spec" <<EOF
 name: $RULESENGINE
 options:
@@ -81,20 +83,34 @@ targets:
         GENERATE_INFOPLIST_FILE: YES
         INSTALL_PATH: "\$(LOCAL_LIBRARY_DIR)/Frameworks"
         PRODUCT_BUNDLE_IDENTIFIER: com.adobe.aep.rulesengine
+        PRODUCT_NAME: $RULESENGINE
+        PRODUCT_MODULE_NAME: $RULESENGINE
         SKIP_INSTALL: NO
         SWIFT_VERSION: "5.0"
 EOF
 
-  xcodegen generate --spec "$spec" --project "$project_dir" --quiet
+  if ! xcodegen generate --spec "$spec" --project "$project_dir" --quiet >&2; then
+    echo "Could not generate the AEPRulesEngine framework project" >&2
+    return 1
+  fi
+  if [ ! -d "$project_dir/$RULESENGINE.xcodeproj" ]; then
+    echo "Generated AEPRulesEngine project is missing at $project_dir" >&2
+    return 1
+  fi
   printf '%s\n' "$project_dir/$RULESENGINE.xcodeproj"
 }
 
 archive_rulesengine() {
   local platform=$1
-  local project
-  project=$(prepare_rulesengine_project)
-  archive_target "$project" "$RULESENGINE" "$platform" device
-  archive_target "$project" "$RULESENGINE" "$platform" simulator
+  local project scheme
+  project=$(prepare_rulesengine_project) || return 1
+  case "$platform" in
+    ios) scheme="${RULESENGINE}_iOS" ;;
+    tvos) scheme="${RULESENGINE}_tvOS" ;;
+    *) echo "Unsupported AEPRulesEngine platform: $platform" >&2; return 1 ;;
+  esac
+  archive_target "$project" "$RULESENGINE" "$platform" device "$scheme"
+  archive_target "$project" "$RULESENGINE" "$platform" simulator "$scheme"
 }
 
 build_platform() {
